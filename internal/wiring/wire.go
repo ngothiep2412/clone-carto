@@ -7,6 +7,7 @@ package wiring
 
 import (
 	"clone-carto/internal/app"
+	"clone-carto/internal/configs"
 	"clone-carto/internal/dataaccess"
 	"clone-carto/internal/handlers"
 	"clone-carto/internal/handlers/logic"
@@ -20,10 +21,11 @@ var WireSet = wire.NewSet(
 	dataaccess.WireSet,
 	logic.WireSet,
 	handlers.WireSet,
+	configs.WireSet,
 	app.WireSet,
 )
 
-func InitializeCarto() (app.Carto, func(), error) {
+func InitializeCarto(filePath configs.ConfigFilePath) (app.Carto, func(), error) {
 	wire.Build(WireSet)
 
 	return nil, nil, nil

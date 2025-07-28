@@ -25,6 +25,13 @@ type role struct {
 	logger *zap.Logger
 }
 
+func NewRole(logger *zap.Logger) Role {
+	return &role{
+		rbac:   initializeGoRBAC(),
+		logger: logger,
+	}
+}
+
 func initializeGoRBAC() *gorbac.RBAC {
 	rbac := gorbac.New()
 

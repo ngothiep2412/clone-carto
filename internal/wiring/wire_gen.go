@@ -8,9 +8,12 @@ package wiring
 
 import (
 	"clone-carto/internal/app"
+	"clone-carto/internal/configs"
 	"clone-carto/internal/dataaccess"
+	"clone-carto/internal/dataaccess/db"
 	"clone-carto/internal/handlers"
 	"clone-carto/internal/handlers/http"
+	"clone-carto/internal/handlers/http/middlewares"
 	"clone-carto/internal/handlers/logic"
 	"clone-carto/internal/handlers/utils"
 	"github.com/google/wire"
@@ -18,14 +21,41 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeCarto() (app.Carto, func(), error) {
-	apiServer := http.NewAPIServerHandler()
-	handler := http.NewSPAHandler()
-	server := http.NewServer(apiServer, handler)
+func InitializeCarto(filePath configs.ConfigFilePath) (app.Carto, func(), error) {
+	config, err := configs.NewConfig(filePath)
+	if err != nil {
+		return nil, nil, err
+	}
+	hash := config.Hash
 	logger, cleanup, err := utils.InitializeLogger()
 	if err != nil {
 		return nil, nil, err
 	}
+	logicHash := logic.NewHash(hash, logger)
+	gormDB, err := db.InitializeDB()
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	accountDataAccessor := db.NewAccountDataAccessor(gormDB)
+	token := config.Token
+	logicToken, err := logic.NewToken(accountDataAccessor, token, logger)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	role := logic.NewRole(logger)
+	accountPasswordDataAccessor := db.NewAccountPasswordDataAccessor(gormDB)
+	account := logic.NewAccount(logicHash, logicToken, role, accountDataAccessor, accountPasswordDataAccessor, gormDB, logger)
+	apiServer := http.NewAPIServerHandler(account)
+	handler := http.NewSPAHandler()
+	auth, err := middlewares.NewAuth(logicToken, token, logger)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	v := http.InitializeMiddlewareList(auth)
+	server := http.NewServer(apiServer, handler, v)
 	carto := app.NewCarto(server, logger)
 	return carto, func() {
 		cleanup()
@@ -34,4 +64,4 @@ func InitializeCarto() (app.Carto, func(), error) {
 
 // wire.go:
 
-var WireSet = wire.NewSet(utils.WireSet, dataaccess.WireSet, logic.WireSet, handlers.WireSet, app.WireSet)
+var WireSet = wire.NewSet(utils.WireSet, dataaccess.WireSet, logic.WireSet, handlers.WireSet, configs.WireSet, app.WireSet)

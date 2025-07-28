@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	carto, cleanup, err := wiring.InitializeCarto()
+	carto, cleanup, err := wiring.InitializeCarto("")
 	if err != nil {
 		log.Println(err)
 		panic(err)

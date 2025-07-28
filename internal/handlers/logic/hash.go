@@ -4,6 +4,7 @@ import (
 	"clone-carto/internal/configs"
 	"clone-carto/internal/handlers/utils"
 	"context"
+	"errors"
 
 	"gitlab.com/pjrpc/pjrpc/v2"
 	"go.uber.org/zap"
@@ -12,6 +13,7 @@ import (
 
 type Hash interface {
 	Hash(ctx context.Context, data string) (string, error)
+	IsHashEqual(ctx context.Context, data string, hashed string) (bool, error)
 }
 
 type hash struct {
@@ -36,4 +38,19 @@ func (h hash) Hash(ctx context.Context, data string) (string, error) {
 	}
 
 	return string(hashed), nil
+}
+
+func (h hash) IsHashEqual(ctx context.Context, data string, hashed string) (bool, error) {
+	logger := utils.LoggerWithContext(ctx, h.logger)
+
+	if err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(data)); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return false, nil
+		}
+
+		logger.With(zap.Error(err)).Error("failed to compare data with hash")
+		return false, pjrpc.JRPCErrInternalError()
+	}
+
+	return true, nil
 }

@@ -3,19 +3,26 @@ package http
 import (
 	"context"
 
+	"clone-carto/internal/handlers/http/middlewares"
 	"clone-carto/internal/handlers/http/rpc"
 	"clone-carto/internal/handlers/http/rpc/rpcserver"
+	"clone-carto/internal/handlers/http/utils"
+	"clone-carto/internal/handlers/logic"
 )
 
 type apiServerHandler struct {
+	accountLogic logic.Account
 }
 
-func NewAPIServerHandler() rpcserver.APIServer {
-	return &apiServerHandler{}
+func NewAPIServerHandler(accountLogic logic.Account) rpcserver.APIServer {
+	return &apiServerHandler{
+		accountLogic: accountLogic,
+	}
 }
 
 func (a apiServerHandler) CreateAccount(ctx context.Context, in *rpc.CreateAccountRequest) (*rpc.CreateAccountResponse, error) {
-	panic("unimplemented")
+	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	return a.accountLogic.CreateAccount(ctx, in, token)
 }
 
 func (a apiServerHandler) CreateProblem(ctx context.Context, in *rpc.CreateProblemRequest) (*rpc.CreateProblemResponse, error) {
@@ -23,7 +30,13 @@ func (a apiServerHandler) CreateProblem(ctx context.Context, in *rpc.CreateProbl
 }
 
 func (a apiServerHandler) CreateSession(ctx context.Context, in *rpc.CreateSessionRequest) (*rpc.CreateSessionResponse, error) {
-	panic("unimplemented")
+	response, token, err := a.accountLogic.CreateSession(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+
+	utils.SetAuthorizationBearerToken(ctx, token)
+	return response, nil
 }
 
 func (a apiServerHandler) CreateSubmission(ctx context.Context, in *rpc.CreateSubmissionRequest) (*rpc.CreateSubmissionResponse, error) {
@@ -43,7 +56,12 @@ func (a apiServerHandler) DeleteProblem(ctx context.Context, in *rpc.DeleteProbl
 }
 
 func (a apiServerHandler) DeleteSession(ctx context.Context, in *rpc.DeleteSessionRequest) (*rpc.DeleteSessionResponse, error) {
-	panic("unimplemented")
+	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	if err := a.accountLogic.DeleteSession(ctx, token); err != nil {
+		return nil, err
+	}
+
+	return &rpc.DeleteSessionResponse{}, nil
 }
 
 func (a apiServerHandler) DeleteSubmission(ctx context.Context, in *rpc.DeleteSubmissionRequest) (*rpc.DeleteSubmissionResponse, error) {
@@ -55,11 +73,13 @@ func (a apiServerHandler) DeleteTestCase(ctx context.Context, in *rpc.DeleteTest
 }
 
 func (a apiServerHandler) GetAccount(ctx context.Context, in *rpc.GetAccountRequest) (*rpc.GetAccountResponse, error) {
-	panic("unimplemented")
+	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	return a.accountLogic.GetAccount(ctx, in, token)
 }
 
 func (a apiServerHandler) GetAccountList(ctx context.Context, in *rpc.GetAccountListRequest) (*rpc.GetAccountListResponse, error) {
-	panic("unimplemented")
+	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	return a.accountLogic.GetAccountList(ctx, in, token)
 }
 
 func (a apiServerHandler) GetAccountProblemSnippetList(ctx context.Context, in *rpc.GetAccountProblemSnippetListRequest) (*rpc.GetAccountProblemSnippetListResponse, error) {
@@ -99,7 +119,8 @@ func (a apiServerHandler) GetTestCase(ctx context.Context, in *rpc.GetTestCaseRe
 }
 
 func (a apiServerHandler) UpdateAccount(ctx context.Context, in *rpc.UpdateAccountRequest) (*rpc.UpdateAccountResponse, error) {
-	panic("unimplemented")
+	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	return a.accountLogic.UpdateAccount(ctx, in, token)
 }
 
 func (a apiServerHandler) UpdateProblem(ctx context.Context, in *rpc.UpdateProblemRequest) (*rpc.UpdateProblemResponse, error) {

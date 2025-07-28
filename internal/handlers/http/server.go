@@ -15,15 +15,18 @@ type Server interface {
 type server struct {
 	apiServerHandler rpcserver.APIServer // for RPC
 	spaHandler       http.Handler        // for frontend SPA
+	middlewareList   []pjrpc.Middleware
 }
 
 func NewServer(
 	apiServerHandler rpcserver.APIServer,
 	spaHandler http.Handler,
+	middlewareList []pjrpc.Middleware,
 ) Server {
 	return &server{
 		apiServerHandler: apiServerHandler,
 		spaHandler:       spaHandler,
+		middlewareList:   middlewareList,
 	}
 }
 
@@ -31,7 +34,7 @@ func (s server) Start() error {
 	srv := pjrpc.NewServerHTTP()
 	srv.SetLogger(log.Writer())
 
-	rpcserver.RegisterAPIServer(srv, s.apiServerHandler)
+	rpcserver.RegisterAPIServer(srv, s.apiServerHandler, s.middlewareList...)
 
 	mux := http.NewServeMux()
 
