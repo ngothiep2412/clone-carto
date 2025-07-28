@@ -17,6 +17,7 @@ type AccountPasswordDataAccessor interface {
 	CreateAccountPassword(ctx context.Context, accountPassword *AccountPassword) error
 	UpdateAccountPassword(ctx context.Context, accountPassword *AccountPassword) error
 	GetAccountPassword(ctx context.Context, id uint64) (*AccountPassword, error)
+	GetAccountPasswordOfAccountID(ctx context.Context, accountID uint64) (*AccountPassword, error)
 	WithDB(db *gorm.DB) AccountPasswordDataAccessor
 }
 
@@ -63,6 +64,21 @@ func (a accountPasswordDataAccessor) UpdateAccountPassword(ctx context.Context, 
 	}
 
 	return nil
+}
+
+func (a accountPasswordDataAccessor) GetAccountPasswordOfAccountID(ctx context.Context, accountID uint64) (*AccountPassword, error) {
+	db := a.db.WithContext(ctx)
+	accountPassword := new(AccountPassword)
+	if err := db.Model(new(AccountPassword)).
+		Where(&AccountPassword{
+			OfAccountID: accountID,
+		}).
+		First(accountPassword).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return accountPassword, nil
 }
 
 func (a accountPasswordDataAccessor) WithDB(db *gorm.DB) AccountPasswordDataAccessor {
