@@ -24,14 +24,14 @@ const (
 
 type Submission struct {
 	gorm.Model
-	OfProblemID  uint64
-	Problem      Problem `gorm:"foreignKey:OfProblemID"`
-	AuthorUserID uint64
-	Author       User   `gorm:"foreignKey:AuthorUserID"`
-	Content      string `gorm:"type:text"`
-	Language     string
-	Status       SubmissionStatus
-	Result       SubmissionResult
+	OfProblemID     uint64
+	Problem         Problem `gorm:"foreignKey:OfProblemID"`
+	AuthorAccountID uint64
+	Author          Account `gorm:"foreignKey:AuthorAccountID"`
+	Content         string  `gorm:"type:text"`
+	Language        string
+	Status          SubmissionStatus
+	Result          SubmissionResult
 }
 
 type SubmissionDataAccessor interface {
@@ -39,10 +39,10 @@ type SubmissionDataAccessor interface {
 	UpdateSubmission(ctx context.Context, Submission *Submission) error
 	GetSubmission(ctx context.Context, id uint64) (*Submission, error)
 	GetSubmissionList(ctx context.Context, offset, limit uint64) ([]*Submission, error)
-	GetUserSubmissionList(ctx context.Context, userID uint64, offset, limit uint64) ([]*Submission, error)
+	GetAccountSubmissionList(ctx context.Context, accountID uint64, offset, limit uint64) ([]*Submission, error)
 	GetProblemSubmissionList(ctx context.Context, problemID uint64, offset, limit uint64) ([]*Submission, error)
 	GetSubmissionCount(ctx context.Context) (uint64, error)
-	GetUserSubmissionCount(ctx context.Context, userID uint64) (uint64, error)
+	GetAccountSubmissionCount(ctx context.Context, accountID uint64) (uint64, error)
 	GetProblemSubmissionCount(ctx context.Context, problemID uint64) (uint64, error)
 	WithDB(db *gorm.DB) SubmissionDataAccessor
 }
@@ -73,7 +73,7 @@ func (a submissionDataAccessor) GetSubmissionCount(ctx context.Context) (uint64,
 	panic("unimplemented")
 }
 
-func (a submissionDataAccessor) GetUserSubmissionCount(ctx context.Context, userID uint64) (uint64, error) {
+func (a submissionDataAccessor) GetAccountSubmissionCount(ctx context.Context, accountID uint64) (uint64, error) {
 	panic("unimplemented")
 }
 
@@ -85,7 +85,7 @@ func (a submissionDataAccessor) GetSubmissionList(ctx context.Context, offset ui
 	panic("unimplemented")
 }
 
-func (a submissionDataAccessor) GetUserSubmissionList(ctx context.Context, userID uint64, offset, limit uint64) ([]*Submission, error) {
+func (a submissionDataAccessor) GetAccountSubmissionList(ctx context.Context, accountID uint64, offset, limit uint64) ([]*Submission, error) {
 	panic("unimplemented")
 }
 

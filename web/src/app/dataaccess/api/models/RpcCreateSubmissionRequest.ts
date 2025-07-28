@@ -30,7 +30,7 @@ export interface RpcCreateSubmissionRequest {
      * @type {number}
      * @memberof RpcCreateSubmissionRequest
      */
-    authorUserID: number;
+    authorAccountID: number;
     /**
      * 
      * @type {string}
@@ -50,7 +50,7 @@ export interface RpcCreateSubmissionRequest {
  */
 export function instanceOfRpcCreateSubmissionRequest(value: object): value is RpcCreateSubmissionRequest {
     if (!('problemID' in value) || value['problemID'] === undefined) return false;
-    if (!('authorUserID' in value) || value['authorUserID'] === undefined) return false;
+    if (!('authorAccountID' in value) || value['authorAccountID'] === undefined) return false;
     if (!('content' in value) || value['content'] === undefined) return false;
     if (!('language' in value) || value['language'] === undefined) return false;
     return true;
@@ -67,7 +67,7 @@ export function RpcCreateSubmissionRequestFromJSONTyped(json: any, ignoreDiscrim
     return {
         
         'problemID': json['ProblemID'],
-        'authorUserID': json['AuthorUserID'],
+        'authorAccountID': json['AuthorAccountID'],
         'content': json['Content'],
         'language': json['Language'],
     };
@@ -85,7 +85,7 @@ export function RpcCreateSubmissionRequestToJSONTyped(value?: RpcCreateSubmissio
     return {
         
         'ProblemID': value['problemID'],
-        'AuthorUserID': value['authorUserID'],
+        'AuthorAccountID': value['authorAccountID'],
         'Content': value['content'],
         'Language': value['language'],
     };

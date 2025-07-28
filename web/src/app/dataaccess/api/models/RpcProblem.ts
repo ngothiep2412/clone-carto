@@ -20,13 +20,13 @@ import {
     RpcProblemExampleToJSON,
     RpcProblemExampleToJSONTyped,
 } from './RpcProblemExample';
-import type { RpcUser } from './RpcUser';
+import type { RpcAccount } from './RpcAccount';
 import {
-    RpcUserFromJSON,
-    RpcUserFromJSONTyped,
-    RpcUserToJSON,
-    RpcUserToJSONTyped,
-} from './RpcUser';
+    RpcAccountFromJSON,
+    RpcAccountFromJSONTyped,
+    RpcAccountToJSON,
+    RpcAccountToJSONTyped,
+} from './RpcAccount';
 
 /**
  * 
@@ -48,10 +48,10 @@ export interface RpcProblem {
     displayName: string;
     /**
      * 
-     * @type {RpcUser}
+     * @type {RpcAccount}
      * @memberof RpcProblem
      */
-    author: RpcUser;
+    author: RpcAccount;
     /**
      * 
      * @type {string}
@@ -118,7 +118,7 @@ export function RpcProblemFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         
         'iD': json['ID'],
         'displayName': json['DisplayName'],
-        'author': RpcUserFromJSON(json['Author']),
+        'author': RpcAccountFromJSON(json['Author']),
         'description': json['Description'],
         'timeLimitInMillisecond': json['TimeLimitInMillisecond'],
         'memoryLimitInByte': json['MemoryLimitInByte'],
@@ -141,7 +141,7 @@ export function RpcProblemToJSONTyped(value?: RpcProblem | null, ignoreDiscrimin
         
         'ID': value['iD'],
         'DisplayName': value['displayName'],
-        'Author': RpcUserToJSON(value['author']),
+        'Author': RpcAccountToJSON(value['author']),
         'Description': value['description'],
         'TimeLimitInMillisecond': value['timeLimitInMillisecond'],
         'MemoryLimitInByte': value['memoryLimitInByte'],

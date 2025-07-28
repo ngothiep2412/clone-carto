@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
-import type { RpcUser } from './RpcUser';
+import type { RpcAccount } from './RpcAccount';
 import {
-    RpcUserFromJSON,
-    RpcUserFromJSONTyped,
-    RpcUserToJSON,
-    RpcUserToJSONTyped,
-} from './RpcUser';
+    RpcAccountFromJSON,
+    RpcAccountFromJSONTyped,
+    RpcAccountToJSON,
+    RpcAccountToJSONTyped,
+} from './RpcAccount';
 
 /**
  * 
@@ -29,17 +29,17 @@ import {
 export interface RpcCreateSessionResponse {
     /**
      * 
-     * @type {RpcUser}
+     * @type {RpcAccount}
      * @memberof RpcCreateSessionResponse
      */
-    user: RpcUser;
+    account: RpcAccount;
 }
 
 /**
  * Check if a given object implements the RpcCreateSessionResponse interface.
  */
 export function instanceOfRpcCreateSessionResponse(value: object): value is RpcCreateSessionResponse {
-    if (!('user' in value) || value['user'] === undefined) return false;
+    if (!('account' in value) || value['account'] === undefined) return false;
     return true;
 }
 
@@ -53,7 +53,7 @@ export function RpcCreateSessionResponseFromJSONTyped(json: any, ignoreDiscrimin
     }
     return {
         
-        'user': RpcUserFromJSON(json['User']),
+        'account': RpcAccountFromJSON(json['Account']),
     };
 }
 
@@ -68,7 +68,7 @@ export function RpcCreateSessionResponseToJSONTyped(value?: RpcCreateSessionResp
 
     return {
         
-        'User': RpcUserToJSON(value['user']),
+        'Account': RpcAccountToJSON(value['account']),
     };
 }
 

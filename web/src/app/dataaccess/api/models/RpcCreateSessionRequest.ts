@@ -24,7 +24,7 @@ export interface RpcCreateSessionRequest {
      * @type {string}
      * @memberof RpcCreateSessionRequest
      */
-    username: string;
+    accountName: string;
     /**
      * 
      * @type {string}
@@ -37,7 +37,7 @@ export interface RpcCreateSessionRequest {
  * Check if a given object implements the RpcCreateSessionRequest interface.
  */
 export function instanceOfRpcCreateSessionRequest(value: object): value is RpcCreateSessionRequest {
-    if (!('username' in value) || value['username'] === undefined) return false;
+    if (!('accountName' in value) || value['accountName'] === undefined) return false;
     if (!('password' in value) || value['password'] === undefined) return false;
     return true;
 }
@@ -52,7 +52,7 @@ export function RpcCreateSessionRequestFromJSONTyped(json: any, ignoreDiscrimina
     }
     return {
         
-        'username': json['Username'],
+        'accountName': json['AccountName'],
         'password': json['Password'],
     };
 }
@@ -68,7 +68,7 @@ export function RpcCreateSessionRequestToJSONTyped(value?: RpcCreateSessionReque
 
     return {
         
-        'Username': value['username'],
+        'AccountName': value['accountName'],
         'Password': value['password'],
     };
 }

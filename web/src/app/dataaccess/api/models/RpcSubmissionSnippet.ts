@@ -27,13 +27,20 @@ import {
     RpcSubmissionStatusToJSON,
     RpcSubmissionStatusToJSONTyped,
 } from './RpcSubmissionStatus';
-import type { RpcUser } from './RpcUser';
+import type { RpcSubmissionResult } from './RpcSubmissionResult';
 import {
-    RpcUserFromJSON,
-    RpcUserFromJSONTyped,
-    RpcUserToJSON,
-    RpcUserToJSONTyped,
-} from './RpcUser';
+    RpcSubmissionResultFromJSON,
+    RpcSubmissionResultFromJSONTyped,
+    RpcSubmissionResultToJSON,
+    RpcSubmissionResultToJSONTyped,
+} from './RpcSubmissionResult';
+import type { RpcAccount } from './RpcAccount';
+import {
+    RpcAccountFromJSON,
+    RpcAccountFromJSONTyped,
+    RpcAccountToJSON,
+    RpcAccountToJSONTyped,
+} from './RpcAccount';
 
 /**
  * 
@@ -55,10 +62,10 @@ export interface RpcSubmissionSnippet {
     problem: RpcSubmissionProblemSnippet;
     /**
      * 
-     * @type {RpcUser}
+     * @type {RpcAccount}
      * @memberof RpcSubmissionSnippet
      */
-    author: RpcUser;
+    author: RpcAccount;
     /**
      * 
      * @type {string}
@@ -71,6 +78,12 @@ export interface RpcSubmissionSnippet {
      * @memberof RpcSubmissionSnippet
      */
     status: RpcSubmissionStatus;
+    /**
+     * 
+     * @type {RpcSubmissionResult}
+     * @memberof RpcSubmissionSnippet
+     */
+    result: RpcSubmissionResult;
     /**
      * 
      * @type {number}
@@ -90,6 +103,7 @@ export function instanceOfRpcSubmissionSnippet(value: object): value is RpcSubmi
     if (!('author' in value) || value['author'] === undefined) return false;
     if (!('language' in value) || value['language'] === undefined) return false;
     if (!('status' in value) || value['status'] === undefined) return false;
+    if (!('result' in value) || value['result'] === undefined) return false;
     if (!('createdTime' in value) || value['createdTime'] === undefined) return false;
     return true;
 }
@@ -106,9 +120,10 @@ export function RpcSubmissionSnippetFromJSONTyped(json: any, ignoreDiscriminator
         
         'iD': json['ID'],
         'problem': RpcSubmissionProblemSnippetFromJSON(json['Problem']),
-        'author': RpcUserFromJSON(json['Author']),
+        'author': RpcAccountFromJSON(json['Author']),
         'language': json['Language'],
         'status': RpcSubmissionStatusFromJSON(json['Status']),
+        'result': RpcSubmissionResultFromJSON(json['Result']),
         'createdTime': json['CreatedTime'],
     };
 }
@@ -126,9 +141,10 @@ export function RpcSubmissionSnippetToJSONTyped(value?: RpcSubmissionSnippet | n
         
         'ID': value['iD'],
         'Problem': RpcSubmissionProblemSnippetToJSON(value['problem']),
-        'Author': RpcUserToJSON(value['author']),
+        'Author': RpcAccountToJSON(value['author']),
         'Language': value['language'],
         'Status': RpcSubmissionStatusToJSON(value['status']),
+        'Result': RpcSubmissionResultToJSON(value['result']),
         'CreatedTime': value['createdTime'],
     };
 }
