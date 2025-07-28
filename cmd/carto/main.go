@@ -1,12 +1,19 @@
 package main
 
 import (
+	"clone-carto/internal/configs"
 	"clone-carto/internal/wiring"
 	"log"
+	"os"
 )
 
 func main() {
-	carto, cleanup, err := wiring.InitializeCarto("")
+	configFilePath := ""
+	if len(os.Args) == 2 {
+		configFilePath = os.Args[1]
+	}
+
+	carto, cleanup, err := wiring.InitializeCarto(configs.ConfigFilePath(configFilePath))
 	if err != nil {
 		log.Println(err)
 		panic(err)

@@ -1,11 +1,13 @@
 package http
 
 import (
+	"clone-carto/internal/configs"
 	"clone-carto/internal/handlers/http/rpc/rpcserver"
 	"log"
 	"net/http"
 
 	"gitlab.com/pjrpc/pjrpc/v2"
+	"go.uber.org/zap"
 )
 
 type Server interface {
@@ -13,20 +15,29 @@ type Server interface {
 }
 
 type server struct {
-	apiServerHandler rpcserver.APIServer // for RPC
-	spaHandler       http.Handler        // for frontend SPA
-	middlewareList   []pjrpc.Middleware
+	apiServerHandler    rpcserver.APIServer // for RPC
+	spaHandler          http.Handler        // for frontend SPA
+	pjrpcmiddlewareList []pjrpc.Middleware
+	httpMiddlewareList  []func(http.Handler) http.Handler
+	logger              *zap.Logger
+	httpConfig          configs.HTTP
 }
 
 func NewServer(
 	apiServerHandler rpcserver.APIServer,
 	spaHandler http.Handler,
-	middlewareList []pjrpc.Middleware,
+	pjrpcmiddlewareList []pjrpc.Middleware,
+	httpMiddlewareList []func(http.Handler) http.Handler,
+	logger *zap.Logger,
+	httpConfig configs.HTTP,
 ) Server {
 	return &server{
-		apiServerHandler: apiServerHandler,
-		spaHandler:       spaHandler,
-		middlewareList:   middlewareList,
+		apiServerHandler:    apiServerHandler,
+		spaHandler:          spaHandler,
+		pjrpcmiddlewareList: pjrpcmiddlewareList,
+		httpMiddlewareList:  httpMiddlewareList,
+		logger:              logger,
+		httpConfig:          httpConfig,
 	}
 }
 
@@ -34,15 +45,20 @@ func (s server) Start() error {
 	srv := pjrpc.NewServerHTTP()
 	srv.SetLogger(log.Writer())
 
-	rpcserver.RegisterAPIServer(srv, s.apiServerHandler, s.middlewareList...)
+	rpcserver.RegisterAPIServer(srv, s.apiServerHandler, s.pjrpcmiddlewareList...)
+
+	var apiHandler http.Handler = srv
+	for i := range s.httpMiddlewareList {
+		apiHandler = s.httpMiddlewareList[i](apiHandler)
+	}
 
 	mux := http.NewServeMux()
 
-	mux.Handle("/api", srv)
-
+	mux.Handle("/api", apiHandler)
 	mux.Handle("/", s.spaHandler)
 
-	log.Println("Starting server at :8080")
-
-	return http.ListenAndServe(":8080", mux)
+	s.logger.
+		With(zap.String("address", s.httpConfig.Address)).
+		Info("starting http server")
+	return http.ListenAndServe(s.httpConfig.Address, mux)
 }

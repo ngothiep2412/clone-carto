@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 
 	"gorm.io/gorm"
 )
@@ -75,7 +76,9 @@ func (a accountPasswordDataAccessor) GetAccountPasswordOfAccountID(ctx context.C
 		}).
 		First(accountPassword).
 		Error; err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 	}
 
 	return accountPassword, nil

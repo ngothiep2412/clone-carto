@@ -2,12 +2,14 @@ package http
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
-	"clone-carto/internal/handlers/http/middlewares"
 	"clone-carto/internal/handlers/http/rpc"
 	"clone-carto/internal/handlers/http/rpc/rpcserver"
-	"clone-carto/internal/handlers/http/utils"
 	"clone-carto/internal/handlers/logic"
+
+	"gitlab.com/pjrpc/pjrpc/v2"
 )
 
 type apiServerHandler struct {
@@ -20,8 +22,32 @@ func NewAPIServerHandler(accountLogic logic.Account) rpcserver.APIServer {
 	}
 }
 
+func (a apiServerHandler) getAuthorizationBearerToken(ctx context.Context) string {
+	contextData, ok := pjrpc.ContextGetData(ctx)
+	if !ok {
+		return ""
+	}
+
+	authorizationHeader := contextData.HTTPRequest.Header.Get("Authorization")
+	authorizationHeaderParts := strings.Split(authorizationHeader, "Bearer ")
+	if len(authorizationHeaderParts) != 2 {
+		return ""
+	}
+
+	return authorizationHeaderParts[1]
+}
+
+func (a apiServerHandler) setAuthorizationBearerToken(ctx context.Context, token string) {
+	contextData, ok := pjrpc.ContextGetData(ctx)
+	if !ok {
+		return
+	}
+
+	contextData.HTTPRequest.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+}
+
 func (a apiServerHandler) CreateAccount(ctx context.Context, in *rpc.CreateAccountRequest) (*rpc.CreateAccountResponse, error) {
-	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	token := a.getAuthorizationBearerToken(ctx)
 	return a.accountLogic.CreateAccount(ctx, in, token)
 }
 
@@ -35,7 +61,7 @@ func (a apiServerHandler) CreateSession(ctx context.Context, in *rpc.CreateSessi
 		return nil, err
 	}
 
-	utils.SetAuthorizationBearerToken(ctx, token)
+	a.setAuthorizationBearerToken(ctx, token)
 	return response, nil
 }
 
@@ -56,7 +82,7 @@ func (a apiServerHandler) DeleteProblem(ctx context.Context, in *rpc.DeleteProbl
 }
 
 func (a apiServerHandler) DeleteSession(ctx context.Context, in *rpc.DeleteSessionRequest) (*rpc.DeleteSessionResponse, error) {
-	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	token := a.getAuthorizationBearerToken(ctx)
 	if err := a.accountLogic.DeleteSession(ctx, token); err != nil {
 		return nil, err
 	}
@@ -73,12 +99,12 @@ func (a apiServerHandler) DeleteTestCase(ctx context.Context, in *rpc.DeleteTest
 }
 
 func (a apiServerHandler) GetAccount(ctx context.Context, in *rpc.GetAccountRequest) (*rpc.GetAccountResponse, error) {
-	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	token := a.getAuthorizationBearerToken(ctx)
 	return a.accountLogic.GetAccount(ctx, in, token)
 }
 
 func (a apiServerHandler) GetAccountList(ctx context.Context, in *rpc.GetAccountListRequest) (*rpc.GetAccountListResponse, error) {
-	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	token := a.getAuthorizationBearerToken(ctx)
 	return a.accountLogic.GetAccountList(ctx, in, token)
 }
 
@@ -119,7 +145,7 @@ func (a apiServerHandler) GetTestCase(ctx context.Context, in *rpc.GetTestCaseRe
 }
 
 func (a apiServerHandler) UpdateAccount(ctx context.Context, in *rpc.UpdateAccountRequest) (*rpc.UpdateAccountResponse, error) {
-	token, _ := ctx.Value(middlewares.AuthContextFieldToken).(string)
+	token := a.getAuthorizationBearerToken(ctx)
 	return a.accountLogic.UpdateAccount(ctx, in, token)
 }
 

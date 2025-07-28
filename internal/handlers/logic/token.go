@@ -6,6 +6,7 @@ import (
 	"clone-carto/internal/handlers/http/rpc"
 	"clone-carto/internal/handlers/utils"
 	"context"
+	"crypto/rsa"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -22,6 +23,8 @@ type Token interface {
 type token struct {
 	accountDataAccessor db.AccountDataAccessor
 	expiresIn           time.Duration
+	privateKey          *rsa.PrivateKey
+	publicKey           *rsa.PublicKey
 	tokenConfig         configs.Token
 	logger              *zap.Logger
 }
@@ -37,9 +40,23 @@ func NewToken(
 		return nil, err
 	}
 
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(tokenConfig.PrivateKey))
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to parse rsa private key")
+		return nil, err
+	}
+
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(tokenConfig.PublicKey))
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to parse rsa public key")
+		return nil, err
+	}
+
 	return &token{
 		accountDataAccessor: accountDataAccessor,
 		expiresIn:           expiresIn,
+		privateKey:          privateKey,
+		publicKey:           publicKey,
 		tokenConfig:         tokenConfig,
 		logger:              logger,
 	}, nil
@@ -49,12 +66,12 @@ func (t token) GetAccountIDAndExpireTime(ctx context.Context, tokenString string
 	logger := utils.LoggerWithContext(ctx, t.logger)
 
 	parsedToken, err := jwt.Parse(tokenString, func(parsedToken *jwt.Token) (interface{}, error) {
-		if _, ok := parsedToken.Method.(*jwt.SigningMethodECDSA); !ok {
+		if _, ok := parsedToken.Method.(*jwt.SigningMethodRSA); !ok {
 			logger.With(zap.Any("alg", parsedToken.Header["alg"])).Error("unexpected signing method")
 			return nil, pjrpc.JRPCErrServerError(int(rpc.ErrorCodeUnauthenticated))
 		}
 
-		return t.tokenConfig.PublicKey, nil
+		return t.publicKey, nil
 	})
 
 	if err != nil {
@@ -89,12 +106,12 @@ func (t token) GetAccountIDAndExpireTime(ctx context.Context, tokenString string
 func (t token) GetToken(ctx context.Context, accountID uint64) (string, error) {
 	logger := utils.LoggerWithContext(ctx, t.logger)
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES512, jwt.MapClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
 		"sub": accountID,
 		"exp": time.Now().Add(t.expiresIn).Unix(),
 	})
 
-	tokenString, err := token.SignedString(t.tokenConfig.PrivateKey)
+	tokenString, err := token.SignedString(t.privateKey)
 	if err != nil {
 		logger.With(zap.Error(err)).Error("failed to sign token")
 		return "", pjrpc.JRPCErrInternalError()

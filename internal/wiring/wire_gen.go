@@ -26,19 +26,21 @@ func InitializeCarto(filePath configs.ConfigFilePath) (app.Carto, func(), error)
 	if err != nil {
 		return nil, nil, err
 	}
-	hash := config.Hash
+	database := config.Database
+	gormDB, err := db.InitializeDB(database)
+	if err != nil {
+		return nil, nil, err
+	}
+	migrator := db.NewMigrator(gormDB)
+	auth := config.Auth
+	hash := auth.Hash
 	logger, cleanup, err := utils.InitializeLogger()
 	if err != nil {
 		return nil, nil, err
 	}
 	logicHash := logic.NewHash(hash, logger)
-	gormDB, err := db.InitializeDB()
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
 	accountDataAccessor := db.NewAccountDataAccessor(gormDB)
-	token := config.Token
+	token := auth.Token
 	logicToken, err := logic.NewToken(accountDataAccessor, token, logger)
 	if err != nil {
 		cleanup()
@@ -49,14 +51,16 @@ func InitializeCarto(filePath configs.ConfigFilePath) (app.Carto, func(), error)
 	account := logic.NewAccount(logicHash, logicToken, role, accountDataAccessor, accountPasswordDataAccessor, gormDB, logger)
 	apiServer := http.NewAPIServerHandler(account)
 	handler := http.NewSPAHandler()
-	auth, err := middlewares.NewAuth(logicToken, token, logger)
+	v := middlewares.InitializePJRPCMiddlewareList()
+	httpAuth, err := middlewares.NewHTTPAuth(logicToken, token, logger)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	v := http.InitializeMiddlewareList(auth)
-	server := http.NewServer(apiServer, handler, v)
-	carto := app.NewCarto(server, logger)
+	v2 := middlewares.InitalizeHTTPMiddlewareList(httpAuth)
+	configsHTTP := config.HTTP
+	server := http.NewServer(apiServer, handler, v, v2, logger, configsHTTP)
+	carto := app.NewCarto(migrator, server, logger)
 	return carto, func() {
 		cleanup()
 	}, nil
