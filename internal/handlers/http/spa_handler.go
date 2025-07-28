@@ -1,6 +1,7 @@
 package http
 
 import (
+	"clone-carto/web"
 	"io"
 	"log"
 	"net/http"
@@ -8,18 +9,21 @@ import (
 	"strings"
 )
 
-type SPAHandler http.Handler
+type SPAHandler interface {
+	http.Handler
+}
 
 type spaHandler struct {
 	fileSystem http.FileSystem
 	fileServer http.Handler
 }
 
-func NewSPAHandler(fileSystem http.FileSystem) SPAHandler {
-	return &spaHandler{
-		fileSystem: fileSystem,
-		fileServer: http.FileServer(fileSystem),
+func NewSPAHandler() http.Handler {
+	h := &spaHandler{
+		fileSystem: http.FS(web.StaticContent),
+		fileServer: http.FileServer(http.FS(web.StaticContent)),
 	}
+	return h
 }
 
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
